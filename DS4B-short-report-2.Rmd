@@ -13,3 +13,32 @@ output:
         fig_width: 8
         fig_height: 4
 ---
+
+```{r, include = F}
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(skimr)
+```
+
+
+# Load data
+```{r}
+data <- read_csv("raw_data/FrogID4_final_dataset.csv")
+```
+
+```{r}
+str(data)
+```
+
+
+```{r}
+data |>
+  count(machineObservation)
+```
+
+```{r}
+ggplot(data, aes(x = decimalLatitude, y = decimalLongitude)) +
+  geom_point(aes(color = stateProvince))
+```
+
