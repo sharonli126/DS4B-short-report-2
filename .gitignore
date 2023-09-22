@@ -47,3 +47,5 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+.DS_Store
+raw_data/FrogID4_final_dataset.csv
