@@ -13,6 +13,16 @@ output:
         fig_width: 8
         fig_height: 4
 ---
+Welcome to the first tutorial of BIOL3207 course. 
+
+Exploratory Data Analysis (EDA) is an approach to study a dataset by summerizing data statistic and visualise them. We can have better understanding to the patterns of observations in the data. We may even discover interesting relationships within data when we are doing the exploratory!
+
+Today we are going to use the frog species dataset which is obtained by citenzens with the FrogID apps in Australia. The data is huge and maybe messy, so it is going to be fun to have a look at it and see what we could find! Here are the learning outcome of this tutorial:
+1. 
+2. 
+3. 
+4.
+5. 
 
 ```{r, include = F}
 library(tidyverse)
