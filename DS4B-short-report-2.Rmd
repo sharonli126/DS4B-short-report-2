@@ -2,6 +2,7 @@
 title: "DS4B-short-report-2"
 author: "Tsz Ching Li u7630977"
 date: "22-9-2023"
+Location on GitHub: https://github.com/sharonli126/DS4B-short-report-2
 output:  
     html_document:
         toc: true
@@ -15,19 +16,26 @@ output:
 ---
 Welcome to the first tutorial of BIOL3207 course. 
 
-Exploratory Data Analysis (EDA) is an approach to study a dataset by summerizing data statistic and visualise them. We can have better understanding to the patterns of observations in the data. We may even discover interesting relationships within data when we are doing the exploratory!
+Here are the learning outcome of this tutorial:
 
-Today we are going to use the frog species dataset which is obtained by citenzens with the FrogID apps in Australia. The data is huge and maybe messy, so it is going to be fun to have a look at it and see what we could find! Here are the learning outcome of this tutorial:
-1. 
-2. 
-3. 
-4.
-5. 
+1. Understand the purpose of EDA
+2. Basic Data Exploratory
+3. Sanity Check
+4. Choose a Right Visualization
+5. Create Visualization
 
-```{r, include = F}
+# What is EDA?
+
+Exploratory Data Analysis (EDA) is an approach to study a data by summarizing data statistic and visualise them. We can have better understanding to the patterns of observations in the data. We may even discover interesting relationships within data when we are doing the exploratory!
+
+Today we are going to use the frog species dataset which is obtained by citizens with the FrogID apps in Australia to learn some EDA techniques. The data is huge and maybe messy, so it is going to be fun to have a look at it and see what we could find!
+
+Here we load the libraries that are usually used in EDA
+```{r}
 library(tidyverse)
-library(dplyr)
-library(GGally)
+# tidyverse actually include dplyr and ggplot2
+library(dplyr) 
+library(ggplot2)
 library(skimr)
 ```
 
@@ -37,18 +45,154 @@ library(skimr)
 data <- read_csv("raw_data/FrogID4_final_dataset.csv")
 ```
 
+# Basic Exploratory
+
+Usually the first thing we do after receiving a data, we will have an overview of the each column and data in it.
+
+The __str()__ function allow us to have a look with all the type of observations
 ```{r}
 str(data)
 ```
 
+With __summary()__, we can know the length and class of observation we have, if it is numeric, its minimum, median, mean, etc will also be shown, so we can quickly know what we are dealing with.
+```{r}
+summary(data)
+```
+
+Or we can also use __head()__ to have a look with the first 6 rows of the data set.
+```{r}
+head(data)
+```
+
+# Sanity Check
+
+Since the data is big and is collected by citizens, the data will probably be messy and missing with "NA" which affect our analysis, so we have to check and handle these unwanted data.
+
+This is to check is there any cell with "NA".
 
 ```{r}
-data |>
-  count(machineObservation)
+any(is.na(data))
+```
+
+The output is "FALSE", so there is no "NA", that's nice!
+
+Now, we have to see is there any data doesn't make sense
+
+```{r}
+# check is there any category not a type of sex
+unique(data$sex)
+# check if all the is there any state not in Australia
+unique(data$stateProvince)
+# check if the country is only Aus
+unique(data$country)
+```
+
+All data are make sense and there is no missing data. Awnsome
+
+# Visualisation
+
+After we have check the data without any problem and have briefly understood what's in the data, we can try to plot something out and see is there any interesting correlation!
+
+## Frog Location
+
+This data contain the location where frogs were found, we can use these data to try understanding the habitat of them. 
+
+We can try plotting which latitude and longitude have the most frogs discovered. Since latitude and longitude are continuous variable, so to find their frequency, it will great to use a histogram!
+
+```{r}
+ggplot(data, aes(decimalLatitude)) +
+  geom_histogram() +
+  labs(title = "Histogram of discovered frog species across latitude", x = "Latitude") +
+  theme_minimal()
 ```
 
 ```{r}
-ggplot(data, aes(x = decimalLatitude, y = decimalLongitude)) +
-  geom_point(aes(color = stateProvince))
+ggplot(data, aes(decimalLongitude)) +
+  geom_histogram() +
+  labs(title = "Histogram of discovered frog species across longitude", x = "Longitude") +
+  theme_minimal()
 ```
 
+We can see that the histogram have shown higher distribution at -40 to -30 and above 140 for latitude and longitude respectively. Since they are coordinate, we can actually try plotting them out at the same time. For two continuous variables, scatter plot will absolutely be a good fit!
+
+Now, we try to use __geom_point()__ to see what happen.
+
+```{r}
+ggplot(data, aes(x = decimalLongitude, y = decimalLatitude)) + # since Latitude is the horizontal line on earth and Longitude is the vertical line on earth, we will try to plot them on y and x respectively
+  geom_point() +
+  labs(title= "Location of Frog found", x = "Longitude", y = "Latitude") +
+  theme_minimal()
+```
+
+It looks like a map of Australia, right? And we can actually see some grouping if we try using __color()__ in __aes()__, so points can be grouped by color and act as another variable to observe!
+
+Since it is related to location, we can try to use stateProvince for the coloring. Also, we can actually try to highlight what does other territories mean and see if we can group them in either of the state/ territories.
+
+```{r}
+OT <- data |> 
+  filter(stateProvince == "Other Territories")
+
+ggplot() +
+  geom_point(data = data, 
+             aes(x = decimalLongitude, y = decimalLatitude, color = stateProvince), 
+             size = 1, 
+             alpha = .5) +
+  geom_point(data = OT, aes(x = decimalLongitude, y = decimalLatitude), color ="red", size = 1) +
+  labs(x = "Longitude", 
+       y = "Latitude", 
+       color = "State & Territories", 
+       title =  " Location of each Discovered Frog") +
+  theme_minimal() 
+```
+
+Here we can see all the data is grouped by stateProvince and we have highlighted the other territories into red. Now, we know other territories is an error, they should be grouped as NSW, since all place in Australia should be under a state or territory.
+
+We can modify the data of "Other Territories" to NSW.
+
+```{r}
+data$stateProvince[data$stateProvince == "Other Territories"] <- "NSW" 
+
+# or by dplyr package
+data <- data |>
+  mutate(stateProvince = ifelse(stateProvince == "Other Territories", "NSW", stateProvince))
+```
+
+Then go back to run again the scatter plot without highlighting the other territories, the color should now not include "Other Territories .
+
+```{r}
+ggplot() +
+  geom_point(data = data, 
+             aes(x = decimalLongitude, y = decimalLatitude, color = stateProvince), 
+             size = 1, 
+             alpha = .5) +
+  labs(x = "Longitude", 
+       y = "Latitude", 
+       color = "State & Territories", 
+       title =  " Location of each Discovered Frog") +
+  theme_minimal() 
+```
+
+
+## Time of Frog Discovery
+
+We are trying to find what time do citizen usually discover a frog by state/ territories, so that we can see when do frogs usually be more active and being seen in each state/ territories.
+
+By the __summary()__/ __str()__ above, we know that the eventTime is actually a chraracter string, this is not convenient for us if we would like to find out the time when frog is more actively seen. Therefore, we try to turn it from character to a time string with __as.hms()__
+
+```{r}
+library (hms)
+data$eventTime <- as.hms(data$eventTime)
+```
+
+After we have change it to a hour-min-sec string, we can now introduce another plotting, the violin plot! It allows us to plot a non continuous and a continuous value and see its distribution along the y axis.
+
+```{r}
+ggplot(data, aes(x = stateProvince, y = eventTime)) +
+  geom_violin() +
+  labs(title = "Time of when Frog Found in Each State/ Territories", y = "Time", x = "State/ Territories") +
+  theme_minimal()
+```
+
+We can see frogs were usually find in night in most of the state or territories, only ACT, TAS or VIC have a less condensed distribution during night. Therefore, frogs probably are more active at night in Australia!
+
+Hope you all have learnt much and find it fun, for further plotting method of ggplot and tidy data function, you can search "ggplot cheatsheat" and "dplyr cheatsheet" online. 
